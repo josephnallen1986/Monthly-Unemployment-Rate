@@ -45,46 +45,39 @@ for (active_county in county_list) {
         unemployment_rate * 100, "%",sep=""),
       param =
         case_when(
-          date == max(date) ~ "current",
-          unemployment_rate == min(unemployment_rate) ~ "min",
-          unemployment_rate == max(unemployment_rate) ~ "max",
+          date == max(date) ~ "Current",
+          unemployment_rate == min(unemployment_rate) ~ "Min",
+          unemployment_rate == max(unemployment_rate) ~ "Max",
         )) %>%
     select(area_name, date, unemployment_rate, label, param)
   
   labor_force <- laus %>%
-    ggplot(aes(
-      x = date, 
-      y = unemployment_rate, 
-      color = area_name, 
-      group = area_name)) +
-    geom_line(size = 1.25, alpha = 0.8) +
-    geom_text_repel(
-      data = dat_labels,
-      colour = case_when(
-        dat_labels$param == "min" ~ "blue",
-        dat_labels$param == "max" ~ "red", 
-        dat_labels$param == "current" ~ "black"),
-      box.padding = 0.5, point.padding = 0.5, max.overlaps = Inf,
-      aes(
-        x = date, 
-        y = unemployment_rate,
-        label = label, 
-        group = area_name)) +
-    geom_point(
-      data = dat_labels,
-      size = 3,
-      fill = case_when(
-        dat_labels$param == "min" ~ "blue",
-        dat_labels$param == "max" ~ "red",
-        dat_labels$param == "current" ~ "black"),
-      aes(x = date,
-          y = unemployment_rate,
-          color = param)) +  
-    scale_color_manual(
-      labels = c("California",active_county, "Current","Max","Min"),
-      values = c(
-        "California" = "#cf7f00","#00597c", 
-        "current" = "black", "max" = "red","min" = "blue")) +
+    ggplot(aes(x=date, y=unemployment_rate)) +
+      geom_line(size = 1.25, alpha = 0.8, aes(x = date,
+                                              y = unemployment_rate,
+                                              colour = area_name,
+                                              group = area_name)) +
+      geom_label_repel(
+        data = dat_labels,
+        fill = "white",
+        alpha = 0.95,
+        colour = case_when(
+          dat_labels$param == "Min" ~ "blue",
+          dat_labels$param == "Max" ~ "red",
+          dat_labels$param == "Current" ~ "black"),
+        box.padding = 1, point.padding = 0.5, max.overlaps = Inf,
+        aes(x = date, y = unemployment_rate, label = label, group = area_name)) +
+      geom_point(data= dat_labels,
+                 aes(x = date, y = unemployment_rate, size = param),
+                 colour = case_when(
+                   dat_labels$param == "Min" ~ "blue",
+                   dat_labels$param == "Max" ~ "red",
+                   dat_labels$param == "Current" ~ "black")) +
+    scale_size_manual("Peaks and Lows", values=rep(3,3),
+                      guide=guide_legend(override.aes = list(colour=c("black", "red", "blue")))) +
+    scale_colour_manual(values = c("#cf7f00", "#00597c"),
+                        guide = guide_legend(override.aes = list(
+                          linetype = c("solid", "solid")))) +
     labs(
       title = active_county,
       subtitle = "Unemployment Rate Three-Year Trend") +
